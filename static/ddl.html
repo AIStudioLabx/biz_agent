@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>上传 DDL 定义 - biz_agent</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, sans-serif;
+            min-height: 100vh;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 0.75rem 1rem;
+            background: #1e293b;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .header a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+
+        .header a:hover {
+            color: #fff;
+        }
+
+        .main {
+            flex: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 1.5rem 1rem;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .card h2 {
+            margin: 0 0 0.75rem 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 140px;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: ui-monospace, monospace;
+            font-size: 0.875rem;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-danger {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .btn-danger:hover {
+            background: #fee2e2;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .form-row {
+            margin-bottom: 0.75rem;
+        }
+
+        .form-row label {
+            display: block;
+            font-size: 0.8125rem;
+            color: #64748b;
+            margin-bottom: 0.25rem;
+        }
+
+        .form-row input {
+            width: 100%;
+            padding: 0.5rem 0.6rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .form-row input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            margin-top: 0.75rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            padding: 0.5rem 0.6rem;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+        }
+
+        td input {
+            width: 100%;
+            padding: 0.35rem 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 0.8125rem;
+        }
+
+        td input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .col-actions {
+            width: 60px;
+            text-align: center;
+        }
+
+        .msg {
+            margin-top: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .msg.success {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .msg.error {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .table-name-inline {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .table-name-inline input {
+            max-width: 320px;
+        }
+    </style>
+</head>
+<body>
+<header class="header">
+    <h1>上传 DDL 定义</h1>
+    <a href="/">← 返回对话</a>
+</header>
+<main class="main">
+    <div class="card">
+        <h2>1. 粘贴 CREATE TABLE 语句</h2>
+        <textarea id="ddlInput"
+                  placeholder="例如：&#10;CREATE TABLE 三方游戏记录表 (&#10;  id BIGINT PRIMARY KEY,&#10;  业务名 VARCHAR(64),&#10;  记录时间 DATETIME&#10;);"></textarea>
+        <div class="actions">
+            <button class="btn btn-primary" id="btnParse" type="button">解析并预览</button>
+        </div>
+        <div class="msg error hidden" id="parseError"></div>
+    </div>
+
+    <div class="card hidden" id="editCard">
+        <h2>2. 确认或修改表结构（可编辑表格）</h2>
+        <div class="form-row table-name-inline">
+            <label>表名</label>
+            <input id="tableName" placeholder="表名" type="text"/>
+        </div>
+        <div class="form-row">
+            <label>列定义</label>
+            <div class="table-wrap">
+                <table id="columnsTable">
+                    <thead>
+                    <tr>
+                        <th>列名</th>
+                        <th>类型</th>
+                        <th>可空</th>
+                        <th class="col-actions">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody id="columnsBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="actions">
+            <button class="btn btn-secondary" id="btnAddCol" type="button">添加一列</button>
+            <button class="btn btn-primary" id="btnSave" type="button">确认并保存到模型</button>
+        </div>
+        <div class="form-row" style="margin-top: 0.75rem;">
+            <label>备注（可选，如：三方游戏记录表）</label>
+            <input id="comment" placeholder="备注" type="text"/>
+        </div>
+        <div class="msg hidden" id="saveMsg"></div>
+    </div>
+</main>
+
+<script>
+    const ddlInput = document.getElementById('ddlInput');
+    const btnParse = document.getElementById('btnParse');
+    const parseError = document.getElementById('parseError');
+    const editCard = document.getElementById('editCard');
+    const tableName = document.getElementById('tableName');
+    const columnsBody = document.getElementById('columnsBody');
+    const btnAddCol = document.getElementById('btnAddCol');
+    const btnSave = document.getElementById('btnSave');
+    const comment = document.getElementById('comment');
+    const saveMsg = document.getElementById('saveMsg');
+
+    function showParseError(msg) {
+        parseError.textContent = msg || '';
+        parseError.classList.toggle('hidden', !msg);
+    }
+
+    function renderColumns(columns) {
+        columnsBody.innerHTML = '';
+        columns.forEach((col, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td><input type="text" data-col="name" value="' + escapeAttr(col.name) + '" /></td>' +
+                '<td><input type="text" data-col="data_type" value="' + escapeAttr(col.data_type) + '" /></td>' +
+                '<td><select data-col="is_nullable"><option value="true"' + (col.is_nullable ? ' selected' : '') + '>是</option><option value="false"' + (!col.is_nullable ? ' selected' : '') + '>否</option></select></td>' +
+                '<td class="col-actions"><button type="button" class="btn btn-danger" data-remove style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">删除</button></td>';
+            tr.querySelector('[data-remove]').addEventListener('click', () => {
+                tr.remove();
+            });
+            columnsBody.appendChild(tr);
+        });
+    }
+
+    function escapeAttr(s) {
+        const div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML.replace(/"/g, '&quot;');
+    }
+
+    function getColumnsFromTable() {
+        const rows = columnsBody.querySelectorAll('tr');
+        const cols = [];
+        rows.forEach(tr => {
+            const name = tr.querySelector('[data-col="name"]').value.trim();
+            const data_type = tr.querySelector('[data-col="data_type"]').value.trim() || 'varchar(255)';
+            const is_nullable = tr.querySelector('[data-col="is_nullable"]').value === 'true';
+            if (name) cols.push({name, data_type, is_nullable});
+        });
+        return cols;
+    }
+
+    btnParse.addEventListener('click', async () => {
+        const text = ddlInput.value.trim();
+        if (!text) {
+            showParseError('请先粘贴 DDL 内容');
+            return;
+        }
+        showParseError('');
+        btnParse.disabled = true;
+        try {
+            const res = await fetch('/v1/parse-ddl', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ddl_text: text})
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                showParseError(data.error || res.statusText || '解析失败');
+                return;
+            }
+            tableName.value = data.table_name || '';
+            renderColumns(data.columns || []);
+            editCard.classList.remove('hidden');
+        } catch (e) {
+            showParseError('请求失败: ' + e.message);
+        } finally {
+            btnParse.disabled = false;
+        }
+    });
+
+    btnAddCol.addEventListener('click', () => {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td><input type="text" data-col="name" placeholder="列名" /></td>' +
+            '<td><input type="text" data-col="data_type" value="varchar(255)" /></td>' +
+            '<td><select data-col="is_nullable"><option value="true" selected>是</option><option value="false">否</option></select></td>' +
+            '<td class="col-actions"><button type="button" class="btn btn-danger" data-remove style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">删除</button></td>';
+        tr.querySelector('[data-remove]').addEventListener('click', () => tr.remove());
+        columnsBody.appendChild(tr);
+    });
+
+    btnSave.addEventListener('click', async () => {
+        const name = tableName.value.trim();
+        const cols = getColumnsFromTable();
+        if (!name) {
+            saveMsg.textContent = '请填写表名';
+            saveMsg.className = 'msg error';
+            saveMsg.classList.remove('hidden');
+            return;
+        }
+        if (cols.length === 0) {
+            saveMsg.textContent = '请至少添加一列';
+            saveMsg.className = 'msg error';
+            saveMsg.classList.remove('hidden');
+            return;
+        }
+        saveMsg.classList.add('hidden');
+        btnSave.disabled = true;
+        try {
+            const res = await fetch('/v1/schema-ddl', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    table_name: name,
+                    columns: cols,
+                    comment: comment.value.trim() || null
+                })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                saveMsg.textContent = data.error || res.statusText || '保存失败';
+                saveMsg.className = 'msg error';
+                saveMsg.classList.remove('hidden');
+                return;
+            }
+            saveMsg.textContent = data.message || '已保存';
+            saveMsg.className = 'msg success';
+            saveMsg.classList.remove('hidden');
+        } catch (e) {
+            saveMsg.textContent = '请求失败: ' + e.message;
+            saveMsg.className = 'msg error';
+            saveMsg.classList.remove('hidden');
+        } finally {
+            btnSave.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>
